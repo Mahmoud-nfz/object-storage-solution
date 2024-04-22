@@ -11,6 +11,7 @@ import (
 )
 
 func init() {
+	// Load environment variables from .env file
 	if err := godotenv.Load(); err != nil {
 		log.Fatal("Error loading .env file")
 	}
@@ -20,7 +21,7 @@ func uploadToMinio(filePath string, fileName string) error {
 	endpoint := os.Getenv("MINIO_ENDPOINT")
 	accessKey := os.Getenv("MINIO_ACCESS_KEY")
 	secretKey := os.Getenv("MINIO_SECRET_KEY")
-	useSSL := false 
+	useSSL := false // Set this to true if Minio server is configured with SSL/TLS
 
 	minioClient, err := minio.New(endpoint, &minio.Options{
 		Creds:  credentials.NewStaticV4(accessKey, secretKey, ""),
@@ -62,9 +63,3 @@ func uploadToMinio(filePath string, fileName string) error {
 	return nil
 }
 
-func main() {
-	err := uploadToMinio("path_to_your_file", "your_file_name")
-	if err != nil {
-		log.Fatal(err)
-	}
-}

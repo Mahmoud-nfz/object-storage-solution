@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
+    "strings"
 	"path/filepath"
 	"time"
 	"github.com/gorilla/websocket"
@@ -47,7 +48,8 @@ func websocketHandler(w http.ResponseWriter, r *http.Request) {
         return
     }
     defer combinedFile.Close()
-
+    var first = true
+    var bucketName = "hiiii"
     for {
         messageType, message, err := conn.ReadMessage()
         if err != nil {
@@ -58,6 +60,14 @@ func websocketHandler(w http.ResponseWriter, r *http.Request) {
         }
 
         if messageType == websocket.TextMessage {
+            if first {
+            FolderName := string(message)
+            FolderName = filepath.Base(FolderName)
+            FolderName = strings.TrimSuffix(FolderName, filepath.Ext(FolderName))
+            FolderName = strings.Split(FolderName, "/")[0]
+            log.Println("Bucket Name:", FolderName)
+            first = false
+            }
             fileName := string(message)
 
             ext := filepath.Ext(fileName)
@@ -86,7 +96,6 @@ func websocketHandler(w http.ResponseWriter, r *http.Request) {
                 break
             }
 
-            // Read file content from WebSocket message
             messageType, content, err := conn.ReadMessage()
             if err != nil {
                 log.Println("Error reading file content:", err)
@@ -110,7 +119,7 @@ func websocketHandler(w http.ResponseWriter, r *http.Request) {
                 break
             }
 
-            err = uploadToMinio(filePath, fileName)
+            err = uploadToMinioFolder(filePath, fileName,bucketName)
             if err != nil {
                 log.Println("Error uploading file to Minio:", err)
             }

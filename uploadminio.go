@@ -17,11 +17,11 @@ func init() {
 	}
 }
 
-func uploadToMinio(filePath string, fileName string) error {
+func uploadToMinioFolder(filePath string, fileName string, bucketName string) error {
 	endpoint := os.Getenv("MINIO_ENDPOINT")
 	accessKey := os.Getenv("MINIO_ACCESS_KEY")
 	secretKey := os.Getenv("MINIO_SECRET_KEY")
-	useSSL := false // Set this to true if Minio server is configured with SSL/TLS
+	useSSL := false 
 
 	minioClient, err := minio.New(endpoint, &minio.Options{
 		Creds:  credentials.NewStaticV4(accessKey, secretKey, ""),
@@ -31,7 +31,6 @@ func uploadToMinio(filePath string, fileName string) error {
 		return err
 	}
 
-	bucketName := "aiiii" 
 	err = minioClient.MakeBucket(context.Background(), bucketName, minio.MakeBucketOptions{})
 	if err != nil {
 		exists, errBucketExists := minioClient.BucketExists(context.Background(), bucketName)
@@ -62,4 +61,3 @@ func uploadToMinio(filePath string, fileName string) error {
 
 	return nil
 }
-

@@ -25,6 +25,9 @@ func randomString(length int) string {
 	return string(b)
 }
 
+var FolderName string 
+var BucketName string
+var fileName string
 func websocketHandler(w http.ResponseWriter, r *http.Request) {
     conn, err := upgrader.Upgrade(w, r, nil)
     if err != nil {
@@ -48,8 +51,7 @@ func websocketHandler(w http.ResponseWriter, r *http.Request) {
         return
     }
     defer combinedFile.Close()
-    var first = true
-    var bucketName = "hiiii"
+
     for {
         messageType, message, err := conn.ReadMessage()
         if err != nil {
@@ -60,17 +62,20 @@ func websocketHandler(w http.ResponseWriter, r *http.Request) {
         }
 
         if messageType == websocket.TextMessage {
-            if first {
-            FolderName := string(message)
-            FolderName = filepath.Base(FolderName)
-            FolderName = strings.TrimSuffix(FolderName, filepath.Ext(FolderName))
-            FolderName = strings.Split(FolderName, "/")[0]
-            log.Println("Bucket Name:", FolderName)
-            first = false
-            }
-            fileName := string(message)
+            
+            received := string(message)
+            log.Println("Received:", received)
+            bucketName := strings.Split(received, "/")[0]
+            fileName = strings.Split(received, "/")[1]
+            log.Println("Bucket", bucketName)
+            FolderName := filepath.Base(received)
+            log.Println("filename", fileName)
+            log.Println("Folder", FolderName)
+            // concatening the folder name with the filename
+            FolderName = FolderName+"/"+fileName
+            log.Println("Folder Name:", FolderName)
 
-            ext := filepath.Ext(fileName)
+            ext := filepath.Ext(FolderName)
 
             newFileName := randomString(10) + ext
 
@@ -119,7 +124,7 @@ func websocketHandler(w http.ResponseWriter, r *http.Request) {
                 break
             }
 
-            err = uploadToMinioFolder(filePath, fileName,bucketName)
+            err = uploadToMinioFolder(filePath, FolderName,bucketName)
             if err != nil {
                 log.Println("Error uploading file to Minio:", err)
             }
@@ -136,6 +141,7 @@ func websocketHandler(w http.ResponseWriter, r *http.Request) {
                 log.Println("Error deleting file:", err)
             }
         }
+      
     }
 
     log.Println("File upload completed")

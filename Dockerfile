@@ -2,17 +2,31 @@
 FROM golang:latest AS builder
 
 WORKDIR /app
+
+# Copy the go mod files and download dependencies
 COPY go.mod go.sum ./
 RUN go mod download
-COPY . .
 
-RUN CGO_ENABLED=0 GOOS=linux go build -o main .
+# Copy your source directory
+COPY src/ ./src/
 
-FROM minio/minio:latest
+# Build the application
+RUN CGO_ENABLED=0 GOOS=linux go build -o main ./src/main.go
 
-COPY --from=builder /app/main /usr/local/bin/
-ENV MINIO_ROOT_USER=minioadmin
-ENV MINIO_ROOT_PASSWORD=minioadmin
+# Stage 2: Setup the runtime container
+FROM alpine:latest  
+RUN apk --no-cache add ca-certificates
 
-EXPOSE 9000 9001
-CMD ["minio", "server", "~/minio", "--console-address", ":9001"]
+WORKDIR /root/
+
+# Copy the pre-built binary file from the previous stage
+COPY --from=builder /app/main .
+
+# Copy the .env file into the container
+COPY .env .
+
+# Expose the necessary port
+EXPOSE 1206
+
+# Run the application
+CMD ["./main"]

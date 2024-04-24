@@ -15,7 +15,6 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-
 func main() {
 	
 	var err error
@@ -36,12 +35,12 @@ func main() {
 		}
 		c.Next()
 	})
-	
+	r.POST("/bucket/:name/:destination/:object", copyObjectToBucket)
 	r.GET("ws",func(c *gin.Context){ websocketHandler(c.Writer, c.Request) })
 	r.GET("/bucket/:name/objects", listBucketObjects)
 	r.DELETE("/bucket/:name/object/:objectName", deleteObject)
 	r.POST("/bucket/:name/object/rename", renameObject)
-
+	
 	err = r.Run(":1206")
 	if err != nil {
 		log.Fatalln("Error starting server:", err)

@@ -71,8 +71,12 @@ func websocketHandler(w http.ResponseWriter, r *http.Request) {
             FolderName := filepath.Base(received)
             log.Println("filename", fileName)
             log.Println("Folder", FolderName)
-            // concatening the folder name with the filename
-            FolderName = FolderName+"/"+fileName
+            if FolderName == fileName {
+                FolderName = "/"+fileName
+                log.Println("Folder Name:", FolderName)
+            } else {
+                FolderName = FolderName + "/" + fileName
+            }
             log.Println("Folder Name:", FolderName)
 
             ext := filepath.Ext(FolderName)

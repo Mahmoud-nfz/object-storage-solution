@@ -32,6 +32,10 @@ func initializeMinioClient() (*minio.Client, error) {
 func uploadToMinioFolder(filePath string, fileName string, bucketName string) error {
 
 	minioClient, err := initializeMinioClient()
+	if _, err := minioClient.StatObject(context.Background(), bucketName, fileName, minio.StatObjectOptions{}); err == nil {
+		fileName = fileName + "_"
+	}
+	
 	err = minioClient.MakeBucket(context.Background(), bucketName, minio.MakeBucketOptions{})
 	if err != nil {
 		exists, errBucketExists := minioClient.BucketExists(context.Background(), bucketName)

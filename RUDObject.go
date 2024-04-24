@@ -10,6 +10,17 @@ import (
 
 var minioClient *minio.Client
 
+func makeBucket(c *gin.Context, destination string) {
+	if _, err := minioClient.BucketExists(context.Background(), destination); err != nil {
+		if errResp := minio.ToErrorResponse(err); errResp.Code == "NoSuchBucket" {
+			err = minioClient.MakeBucket(context.Background(), destination, minio.MakeBucketOptions{})
+			if err != nil {
+				return 
+			}
+		}
+	}
+}
+
 func listBucketObjects(c *gin.Context) {
 	bucketName := c.Param("name")
 	objectsCh := minioClient.ListObjects(context.Background(), bucketName, minio.ListObjectsOptions{
@@ -73,4 +84,33 @@ func renameObject(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "Object renamed successfully"})
 }
+
+func copyObjectToBucket(c *gin.Context) {
+	bucketName := c.Param("name")
+	destination := c.Param("destination")
+	objectName := c.Param("object")
+	fmt.Println("copie")
+	src := minio.CopySrcOptions{
+		Bucket: bucketName,
+		Object: objectName,
+	}
+	dst := minio.CopyDestOptions{
+		Bucket: destination,
+		Object: objectName,
+	}
+	fmt.Println("copie",src,dst)
+	// if err := makeBucket(c, destination); err != nil {
+	// 	c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	// 	return
+	// }
+	c.JSON(http.StatusOK, gin.H{"message": "Copying object..."})
+	_, err := minioClient.CopyObject(context.Background(), dst, src)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Object copied successfully"})
+}
+
 

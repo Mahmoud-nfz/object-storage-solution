@@ -11,26 +11,27 @@ import (
 )
 
 func init() {
-	// Load environment variables from .env file
 	if err := godotenv.Load(); err != nil {
 		log.Fatal("Error loading .env file")
 	}
 }
 
-func uploadToMinioFolder(filePath string, fileName string, bucketName string) error {
+func initializeMinioClient() (*minio.Client, error) {
 	endpoint := os.Getenv("MINIO_ENDPOINT")
 	accessKey := os.Getenv("MINIO_ACCESS_KEY")
 	secretKey := os.Getenv("MINIO_SECRET_KEY")
 	useSSL := false 
 
-	minioClient, err := minio.New(endpoint, &minio.Options{
+	minioClient, _ := minio.New(endpoint, &minio.Options{
 		Creds:  credentials.NewStaticV4(accessKey, secretKey, ""),
 		Secure: useSSL,
 	})
-	if err != nil {
-		return err
-	}
+	return minioClient, nil
+}
 
+func uploadToMinioFolder(filePath string, fileName string, bucketName string) error {
+
+	minioClient, err := initializeMinioClient()
 	err = minioClient.MakeBucket(context.Background(), bucketName, minio.MakeBucketOptions{})
 	if err != nil {
 		exists, errBucketExists := minioClient.BucketExists(context.Background(), bucketName)

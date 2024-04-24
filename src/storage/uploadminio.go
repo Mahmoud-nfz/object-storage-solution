@@ -12,7 +12,6 @@ func UploadToMinioFolder(filePath string, fileName string, bucketName string) er
 
 	MinioClient, err := InitializeMinioClient()
 	if err != nil {
-		// Handle the error, perhaps log it or return it
 		log.Printf("Error initializing Minio Client: %v", err)
 		return err
 	}

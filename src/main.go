@@ -1,8 +1,9 @@
 package main
 
 import (
-	"data-storage/src/routes"
+	"data-storage/src/websockets"
 	"data-storage/src/storage"
+
 	"log"
 	"net/http"
 
@@ -36,8 +37,8 @@ func main() {
 	})
 
 	r.POST("/bucket/:name/:destination/:object", storage.CopyObjectToBucket)
-	r.GET("/download", func(c *gin.Context){ websocketDownloadHandler(c.Writer, c.Request) })
-	r.GET("/upload",func(c *gin.Context){ websocketHandler(c.Writer, c.Request) })
+	r.GET("/download", func(c *gin.Context){ websockets.WebsocketDownloadHandler(c.Writer, c.Request) })
+	r.GET("/upload",func(c *gin.Context){ websockets.WebsocketHandler(c.Writer, c.Request) })
 	r.GET("/hello",
 		func(c *gin.Context) {
 			c.JSON(http.StatusOK, gin.H{"message": "Hello, World!"})

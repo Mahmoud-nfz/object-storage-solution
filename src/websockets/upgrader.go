@@ -1,4 +1,4 @@
-package routes
+package websockets
 
 import (
 	"net/http"

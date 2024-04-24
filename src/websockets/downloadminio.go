@@ -1,4 +1,4 @@
-package routes
+package websockets
 
 import (
 	"bytes"
@@ -7,13 +7,18 @@ import (
 	"io"
 	"log"
 	"net/http"
-
+	"data-storage/src/storage"
 	"github.com/gorilla/websocket"
 	"github.com/minio/minio-go/v7"
 )
 
-func websocketDownloadHandler(w http.ResponseWriter, r *http.Request) {
-	conn, err := upgrader.Upgrade(w, r, nil)
+type Message struct {
+    BucketName string `json:"bucketName"`
+    FileName   string `json:"fileName"`
+}
+
+func WebsocketDownloadHandler(w http.ResponseWriter, r *http.Request) {
+	conn, err := Upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println("Upgrade:", err)
 		return
@@ -39,7 +44,7 @@ func websocketDownloadHandler(w http.ResponseWriter, r *http.Request) {
 
 			log.Printf("Download request for Bucket: %s, File: %s\n", msg.BucketName, msg.FileName)
 
-			err = downloadAndSendFileChunks(conn, msg.FileName, msg.BucketName)
+			err = DownloadAndSendFileChunks(conn, msg.FileName, msg.BucketName)
 			if err != nil {
 				log.Println("Error downloading and sending file chunks:", err)
 				continue
@@ -51,12 +56,11 @@ func websocketDownloadHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func downloadAndSendFileChunks(conn *websocket.Conn, fileName, bucketName string) error {
+func DownloadAndSendFileChunks(conn *websocket.Conn, fileName, bucketName string) error {
 
 	var fileChunks [][]byte
 	log.Println("Downloading file chunks")
-
-	object, err := minioClient.GetObject(context.Background(), bucketName, fileName, minio.GetObjectOptions{})
+	object, err := storage.MinioClient.GetObject(context.Background(), bucketName, fileName, minio.GetObjectOptions{})
 	if err != nil {
 		return err
 	}

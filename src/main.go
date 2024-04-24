@@ -1,24 +1,23 @@
 package main
 
 import (
+	"data-storage/src/routes"
+	"data-storage/src/storage"
 	"log"
 	"net/http"
+
 	"github.com/gin-gonic/gin"
-	"github.com/gorilla/websocket"
+	"github.com/joho/godotenv"
 )
 
-var upgrader = websocket.Upgrader{
-	ReadBufferSize:  1024,
-	WriteBufferSize: 1024,
-	CheckOrigin: func(r *http.Request) bool {
-		return true 
-	},
-}
-
 func main() {
-	
+
+	if err := godotenv.Load(); err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
 	var err error
-	minioClient, err = initializeMinioClient()
+	storage.MinioClient, err = storage.InitializeMinioClient()
 	if err != nil {
 		log.Fatalln("Error initializing Minio client:", err)
 	}
@@ -35,15 +34,21 @@ func main() {
 		}
 		c.Next()
 	})
-	r.POST("/bucket/:name/:destination/:object", copyObjectToBucket)
-	r.GET("ws",func(c *gin.Context){ websocketHandler(c.Writer, c.Request) })
-	r.GET("/bucket/:name/objects", listBucketObjects)
-	r.DELETE("/bucket/:name/object/:objectName", deleteObject)
-	r.POST("/bucket/:name/object/rename", renameObject)
-	
+
+	r.POST("/bucket/:name/:destination/:object", storage.CopyObjectToBucket)
+	r.GET("ws", func(c *gin.Context) { routes.WebsocketHandler(c.Writer, c.Request) })
+	r.GET("/hello",
+		func(c *gin.Context) {
+			c.JSON(http.StatusOK, gin.H{"message": "Hello, World!"})
+		})
+
+	r.GET("/bucket/:name/objects", storage.ListBucketObjects)
+	r.DELETE("/bucket/:name/object/:objectName", storage.DeleteObject)
+	r.POST("/bucket/:name/object/rename", storage.RenameObject)
+
 	err = r.Run(":1206")
 	if err != nil {
 		log.Fatalln("Error starting server:", err)
 	}
-	
+
 }

@@ -36,7 +36,8 @@ func main() {
 	})
 
 	r.POST("/bucket/:name/:destination/:object", storage.CopyObjectToBucket)
-	r.GET("ws", func(c *gin.Context) { routes.WebsocketHandler(c.Writer, c.Request) })
+	r.GET("/download", func(c *gin.Context){ websocketDownloadHandler(c.Writer, c.Request) })
+	r.GET("/upload",func(c *gin.Context){ websocketHandler(c.Writer, c.Request) })
 	r.GET("/hello",
 		func(c *gin.Context) {
 			c.JSON(http.StatusOK, gin.H{"message": "Hello, World!"})

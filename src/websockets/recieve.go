@@ -9,7 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-
+	"io"
 	"github.com/gorilla/websocket"
 )
 
@@ -21,13 +21,26 @@ func WebsocketRecieveObjectHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer conn.Close()
+	tempDir, err := ioutil.TempDir("", "uploads")
+	if err != nil {
+		log.Println("Error creating temporary directory:", err)
+		return
+	}
+	defer os.RemoveAll(tempDir)
+
+	combinedFileName := "combined_file.txt"
+	combinedFilePath := filepath.Join(tempDir, combinedFileName)
+	combinedFile, err := os.Create(combinedFilePath)
+	if err != nil {
+		log.Println("Error creating combined file:", err)
+		return
+	}
+	defer combinedFile.Close()
 
 	for {
 		messageType, message, err := conn.ReadMessage()
 		if err != nil {
-			if websocket.IsCloseError(err, websocket.CloseNormalClosure) {
-				log.Println("Connection closed by client")
-			} else {
+			if err != io.EOF {
 				log.Println("Read:", err)
 			}
 			break
@@ -67,7 +80,7 @@ func WebsocketRecieveObjectHandler(w http.ResponseWriter, r *http.Request) {
 				continue
 			}
 
-			_, err = file.WriteString(fileName + ":\n")
+			_, err = combinedFile.WriteString(fileName + ":\n")
 			if err != nil {
 				log.Println("Error writing original filename to combined file:", err)
 				file.Close()

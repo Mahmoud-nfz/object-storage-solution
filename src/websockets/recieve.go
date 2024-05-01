@@ -18,7 +18,7 @@ var FolderName string
 var BucketName string
 var fileName string
 
-func WebsocketHandler(w http.ResponseWriter, r *http.Request) {
+func WebsocketRecieveObjectHandler(w http.ResponseWriter, r *http.Request) {
 	conn, err := Upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println("Upgrade:", err)

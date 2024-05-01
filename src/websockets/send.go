@@ -3,21 +3,22 @@ package websockets
 import (
 	"bytes"
 	"context"
+	"data-storage/src/storage"
 	"encoding/json"
 	"io"
 	"log"
 	"net/http"
-	"data-storage/src/storage"
+
 	"github.com/gorilla/websocket"
 	"github.com/minio/minio-go/v7"
 )
 
 type Message struct {
-    BucketName string `json:"bucketName"`
-    FileName   string `json:"fileName"`
+	BucketName string `json:"bucketName"`
+	FileName   string `json:"fileName"`
 }
 
-func WebsocketDownloadHandler(w http.ResponseWriter, r *http.Request) {
+func WebsocketSendObjectHandler(w http.ResponseWriter, r *http.Request) {
 	conn, err := Upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println("Upgrade:", err)
@@ -28,7 +29,7 @@ func WebsocketDownloadHandler(w http.ResponseWriter, r *http.Request) {
 	for {
 		messageType, message, err := conn.ReadMessage()
 		if err != nil {
-			if err != io.EOF { 
+			if err != io.EOF {
 				log.Println("Read:", err)
 			}
 			break

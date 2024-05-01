@@ -1,8 +1,8 @@
 package main
 
 import (
-	"data-storage/src/websockets"
 	"data-storage/src/storage"
+	"data-storage/src/websockets"
 
 	"log"
 	"net/http"
@@ -37,13 +37,8 @@ func main() {
 	})
 
 	r.POST("/bucket/:name/:destination/:object", storage.CopyObjectToBucket)
-	r.GET("/download", func(c *gin.Context){ websockets.WebsocketDownloadHandler(c.Writer, c.Request) })
-	r.GET("/upload",func(c *gin.Context){ websockets.WebsocketHandler(c.Writer, c.Request) })
-	r.GET("/hello",
-		func(c *gin.Context) {
-			c.JSON(http.StatusOK, gin.H{"message": "Hello, World!"})
-		})
-
+	r.GET("/download", func(c *gin.Context) { websockets.WebsocketSendObjectHandler(c.Writer, c.Request) })
+	r.GET("/upload", func(c *gin.Context) { websockets.WebsocketRecieveObjectHandler(c.Writer, c.Request) })
 	r.GET("/bucket/:name/objects", storage.ListBucketObjects)
 	r.DELETE("/bucket/:name/object/:objectName", storage.DeleteObject)
 	r.POST("/bucket/:name/object/rename", storage.RenameObject)

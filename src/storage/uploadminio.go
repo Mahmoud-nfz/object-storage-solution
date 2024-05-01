@@ -4,28 +4,22 @@ import (
 	"context"
 	"log"
 	"os"
-
 	"github.com/minio/minio-go/v7"
 )
 
-func UploadToMinioFolder(filePath string, fileName string, bucketName string) error {
 
+
+func UploadToMinioFolder(filePath string, fileName string, bucketName string) error {
 	MinioClient, err := InitializeMinioClient()
 	if err != nil {
 		log.Printf("Error initializing Minio Client: %v", err)
 		return err
 	}
-
-	if _, err := MinioClient.StatObject(context.Background(), bucketName, fileName, minio.StatObjectOptions{}); err == nil {
-		fileName = fileName + "_"
-	}
-
 	err = MinioClient.MakeBucket(context.Background(), bucketName, minio.MakeBucketOptions{})
 	if err != nil {
 		exists, errBucketExists := MinioClient.BucketExists(context.Background(), bucketName)
 		if errBucketExists == nil && exists {
-			log.Printf("We already own %s\n", bucketName)
-		} else {
+			log.Printf("We already own %s\n", bucketName) } else {
 			return err
 		}
 	}

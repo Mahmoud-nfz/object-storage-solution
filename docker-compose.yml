@@ -11,7 +11,7 @@ services:
       MINIO_ROOT_PASSWORD: minioadmin
     command: server /data --console-address ":9001"
 
-  your-app:
+  go-wrapper:
     build: .
     ports:
       - "1206:1206" 

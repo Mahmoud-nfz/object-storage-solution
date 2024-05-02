@@ -4,10 +4,28 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-
+	"io/ioutil"
 	"github.com/gin-gonic/gin"
 	"github.com/minio/minio-go/v7"
 )
+
+func FetchObject(objectName, bucketName string) ([]byte, error) {
+	_, err := MinioClient.StatObject(context.Background(), bucketName, objectName, minio.StatObjectOptions{})
+	if err != nil {
+		return nil, err
+	}
+	reader, err := MinioClient.GetObject(context.Background(), bucketName, objectName, minio.GetObjectOptions{})
+	if err != nil {
+		return nil, err
+	}
+	defer reader.Close()
+
+	objectData, err := ioutil.ReadAll(reader)
+	if err != nil {
+		return nil, err
+	}
+	return objectData, nil
+}
 
 func DeleteObject(c *gin.Context) {
 	bucketName := c.Param("name")

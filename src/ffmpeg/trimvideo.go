@@ -1,7 +1,6 @@
 package ffmpeg
 
 import (
-	"context"
 	"data-storage/src/storage"
 	"fmt"
 	"github.com/gin-gonic/gin"
@@ -33,32 +32,13 @@ func TrimVideo(input []byte, outputFilePath string, startIdx, endIdx string) ([]
     return trimmedVideo, nil
 }
 
-
-func FetchVideoFromMinio(objectName, bucketName string) ([]byte, error) {
-	MinioClient, err := storage.InitializeMinioClient()
-	if err != nil {
-		return nil, err
-	}
-	reader, err := MinioClient.GetObject(context.Background(), bucketName, objectName, minio.GetObjectOptions{})
-	if err != nil {
-		return nil, err
-	}
-	defer reader.Close()
-
-	videoData, err := ioutil.ReadAll(reader)
-	if err != nil {
-		return nil, err
-	}
-	return videoData, nil
-}
-
 func HandleTrimVideo(c *gin.Context) {
 	bucketName := c.Param("bucketName")
 	objectName := c.Param("objectName")
 	startIdx := c.Param("startIdx")
 	endIdx := c.Param("endIdx")
 
-	videoData, err := FetchVideoFromMinio(objectName, bucketName)
+	videoData, err := storage.FetchObject(objectName, bucketName)
 	if err != nil {
 		http.Error(c.Writer, "Failed to fetch video from MinIO", http.StatusInternalServerError)
 		return

@@ -3,7 +3,7 @@ package main
 import (
 	"data-storage/src/storage"
 	"data-storage/src/websockets"
-
+	"data-storage/src/ffmpeg"
 	"log"
 	"net/http"
 
@@ -42,6 +42,7 @@ func main() {
 	r.GET("/bucket/:name/objects", storage.ListBucketObjects)
 	r.DELETE("/bucket/:name/object/:objectName", storage.DeleteObject)
 	r.POST("/bucket/:name/object/rename", storage.RenameObject)
+	r.POST("trim-video/:bucketName/:objectName/:startIdx/:endIdx", ffmpeg.HandleTrimVideo)
 
 	err = r.Run(":1206")
 	if err != nil {

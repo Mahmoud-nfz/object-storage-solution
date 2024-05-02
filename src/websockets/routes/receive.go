@@ -3,27 +3,31 @@ package websockets
 import (
 	"data-storage/src/storage"
 	"data-storage/src/utils"
-	"io/ioutil"
+	"data-storage/src/websockets"
+	"io"
 	"log"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
-	"io"
+
+	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 )
 
-
-func WebsocketRecieveObjectHandler(w http.ResponseWriter, r *http.Request) {
-	conn, err := Upgrader.Upgrade(w, r, nil)
+func WebsocketReceiveObjectHandler(c *gin.Context) {
+	w := c.Writer
+	r := c.Request
+	conn, err := websockets.Upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Println("Upgrade:", err)
+		log.Panicln("Upgrader error:", err)
 		return
 	}
 	defer conn.Close()
-	tempDir, err := ioutil.TempDir("", "uploads")
+
+	tempDir, err := os.MkdirTemp("", "uploads")
 	if err != nil {
-		log.Println("Error creating temporary directory:", err)
+		log.Panicln("Error creating temporary directory:", err)
 		return
 	}
 	defer os.RemoveAll(tempDir)
@@ -32,32 +36,33 @@ func WebsocketRecieveObjectHandler(w http.ResponseWriter, r *http.Request) {
 	combinedFilePath := filepath.Join(tempDir, combinedFileName)
 	combinedFile, err := os.Create(combinedFilePath)
 	if err != nil {
-		log.Println("Error creating combined file:", err)
+		log.Panicln("Error creating combined file:", err)
 		return
 	}
 	defer combinedFile.Close()
 
 	for {
 		messageType, message, err := conn.ReadMessage()
+
 		if err != nil {
 			if err != io.EOF {
-				log.Println("Read:", err)
+				log.Panicln("Error reading next object to recieve:", err)
 			}
 			break
 		}
 
 		if messageType == websocket.TextMessage {
 			received := string(message)
-			log.Println("Received:", received)
+			// log.Println("Received:", received)
+			params := strings.Split(received, "/")
+			if len(params) != 3 {
+				log.Println("Invalid message format")
+				c.JSON(http.StatusBadRequest, gin.H{
+					"error": "Invalid message format, expected bucket/folder/filename, received: " + received,
+				})
+			}
 			bucketName := strings.Split(received, "/")[0]
 			fileName := strings.Split(received, "/")[1]
-
-			tempDir, err := ioutil.TempDir("", "uploads")
-			if err != nil {
-				log.Println("Error creating temporary directory:", err)
-				continue
-			}
-			defer os.RemoveAll(tempDir)
 
 			FolderName := filepath.Base(received)
 			log.Println("Bucket:", bucketName)
@@ -76,26 +81,27 @@ func WebsocketRecieveObjectHandler(w http.ResponseWriter, r *http.Request) {
 
 			file, err := os.Create(filePath)
 			if err != nil {
-				log.Println("Error creating file:", err)
+				log.Panicln("Error creating file:", err)
 				continue
 			}
 
 			_, err = combinedFile.WriteString(fileName + ":\n")
 			if err != nil {
-				log.Println("Error writing original filename to combined file:", err)
 				file.Close()
+				log.Panicln("Error writing original filename to combined file:", err)
 				continue
 			}
 
 			err = conn.WriteMessage(websocket.TextMessage, []byte("ready"))
 			if err != nil {
-				log.Println("Error sending ready message:", err)
 				file.Close()
+				log.Panicln("Error sending ready message:", err)
 				continue
 			}
 
 			for {
 				messageType, content, err := conn.ReadMessage()
+				log.Println("Message type: ", messageType)
 				if err != nil {
 					if websocket.IsCloseError(err, websocket.CloseNormalClosure) {
 						log.Println("Connection closed by client")

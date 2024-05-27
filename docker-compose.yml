@@ -4,8 +4,8 @@ services:
   minio:
     image: minio/minio:latest
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - 9000:9000
+      - 9001:9001
     environment:
       MINIO_ROOT_USER: minioadmin
       MINIO_ROOT_PASSWORD: minioadmin
@@ -14,7 +14,7 @@ services:
   go-wrapper:
     build: .
     ports:
-      - "1206:1206" 
+      - 1206:1206
     depends_on:
       - minio
     environment:

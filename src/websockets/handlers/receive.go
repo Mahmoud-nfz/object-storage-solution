@@ -1,8 +1,9 @@
-package websockets
+package handlers
 
 import (
 	"data-storage/src/websockets"
-	helpers "data-storage/src/websockets/helpers"
+	"data-storage/src/websockets/helpers"
+
 	"log"
 	"os"
 	"path/filepath"

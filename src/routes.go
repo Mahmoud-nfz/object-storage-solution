@@ -1,6 +1,7 @@
 package main
 
 import (
+	"data-storage/src/auth"
 	"data-storage/src/storage"
 	websockets "data-storage/src/websockets/handlers"
 	"net/http"
@@ -25,11 +26,11 @@ func initializeRoutes() {
 		c.Next()
 	})
 
-	router.GET("/download", websockets.WebsocketSendObjectHandler)
+	router.GET("/download", auth.EnsureUserAuthenticated(), websockets.WebsocketSendObjectHandler)
 
-	router.GET("/upload", websockets.WebsocketReceiveObjectHandler)
+	router.GET("/upload", auth.EnsureUserAuthenticated(), websockets.WebsocketReceiveObjectHandler)
 
-	bucketRoutes := router.Group("/bucket")
+	bucketRoutes := router.Group("/bucket", auth.EnsureBackendAuthenticated())
 	{
 		bucketRoutes.GET("/:name/objects", storage.ListBucketObjects)
 

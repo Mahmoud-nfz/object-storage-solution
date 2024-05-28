@@ -1,8 +1,8 @@
 package handlers
 
 import (
-	"data-storage/src/websockets"
 	"data-storage/src/storage"
+	"data-storage/src/websockets"
 
 	"bytes"
 	"context"

@@ -44,9 +44,8 @@ func main() {
 	r.POST("/trim-video/:bucketName/:objectName/:startIdx/:endIdx", ffmpeg.HandleTrimVideo)
 	r.POST("/transcode-video/:bucketName/:objectName/:outputObjectName", ffmpeg.HandleTranscodeVideo)
 	r.POST("/concat-videos/:bucketName/:outputObjectName/", ffmpeg.HandleConcatVideos)
-	r.Run(":1206")
-	// err = r.Run(":1206")
-	// if err != nil {
-	// 	log.Fatalln("Error starting server:", err)
-	// }
+	err = r.Run(":1206")
+	if err != nil {
+		log.Fatalln("Error starting server:", err)
+	}
 }

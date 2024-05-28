@@ -29,8 +29,11 @@ func HandleTranscodeVideo(c *gin.Context) {
     bucketName := c.Param("bucketName")
     objectName := c.Param("objectName")
     outputObjectName := c.Param("outputObjectName")
-    // default codec is mp4
+    // get codec from outputObjectName extension
     codec := "libx264"
+    if filepath.Ext(outputObjectName) == ".webm" {
+        codec = "libvpx-vp9"
+    }
 
     inputFilePath := filepath.Join(os.TempDir(), "input-video.mp4")
     outputFilePath := filepath.Join(os.TempDir(), "output-video.mp4")

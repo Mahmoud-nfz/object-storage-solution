@@ -15,7 +15,9 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o main ./src/main.go
 
 # Stage 2: Setup the runtime container
 FROM alpine:latest  
-RUN apk --no-cache add ca-certificates
+
+# Install ca-certificates and ffmpeg
+RUN apk --no-cache add ca-certificates ffmpeg
 
 WORKDIR /root/
 

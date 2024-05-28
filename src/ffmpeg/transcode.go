@@ -29,7 +29,8 @@ func HandleTranscodeVideo(c *gin.Context) {
     bucketName := c.Param("bucketName")
     objectName := c.Param("objectName")
     outputObjectName := c.Param("outputObjectName")
-    codec := c.DefaultQuery("codec", "libx264")
+    // default codec is mp4
+    codec := "libx264"
 
     inputFilePath := filepath.Join(os.TempDir(), "input-video.mp4")
     outputFilePath := filepath.Join(os.TempDir(), "output-video.mp4")

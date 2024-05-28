@@ -10,9 +10,10 @@ import (
 
     "github.com/gin-gonic/gin"
     "github.com/minio/minio-go/v7"
-    ffmpeg"github.com/u2takey/ffmpeg-go"
+    ffmpeg "github.com/u2takey/ffmpeg-go"
     "data-storage/src/storage"
 )
+
 
 func TrimVideo(inputPath, outputPath string, start, duration int) error {
     err := ffmpeg.Input(inputPath, ffmpeg.KwArgs{"ss": start}).
@@ -20,6 +21,7 @@ func TrimVideo(inputPath, outputPath string, start, duration int) error {
         OverWriteOutput().
         ErrorToStdOut().
         Run()
+
     if err != nil {
         return fmt.Errorf("failed to trim video: %v", err)
     }
@@ -40,6 +42,7 @@ func HandleTrimVideo(c *gin.Context) {
         return
     }
     duration := endIdx - startIdx
+    fmt.Sprintf("duration: %d", duration)
 
     inputFilePath := filepath.Join(os.TempDir(), "input-video.mp4")
     outputFilePath := filepath.Join(os.TempDir(), "output-video.mp4")
@@ -56,7 +59,7 @@ func HandleTrimVideo(c *gin.Context) {
         return
     }
 
-    _, err = storage.MinioClient.FPutObject(context.Background(), bucketName, "trimmed-"+objectName, outputFilePath, minio.PutObjectOptions{})
+    _,err = storage.MinioClient.FPutObject(context.Background(), bucketName, "trimmed-"+objectName, outputFilePath, minio.PutObjectOptions{})
     if err != nil {
         c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to upload video: %v", err)})
         return

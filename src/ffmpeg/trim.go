@@ -8,7 +8,6 @@ import (
     "path/filepath"
     "strconv"
     "strings"
-    "time"
 
     "github.com/gin-gonic/gin"
     "github.com/minio/minio-go/v7"
@@ -37,7 +36,10 @@ func hmsToSeconds(hms string) (int, error) {
 }
 
 func secondsToHMS(seconds int) string {
-    return time.Duration(seconds * int(time.Second)).String()
+    hours := seconds / 3600
+    minutes := (seconds % 3600) / 60
+    secs := seconds % 60
+    return fmt.Sprintf("%02d:%02d:%02d", hours, minutes, secs)
 }
 
 func TrimVideo(inputPath, outputPath string, start, duration int) error {

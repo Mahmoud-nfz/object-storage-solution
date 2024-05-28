@@ -11,17 +11,16 @@ import (
 
 var MinioClient *minio.Client
 
-func InitializeMinioClient() (*minio.Client, error) {
+func init() {
 	useSSL := false
-	MinioClient, err := minio.New(config.Env.MinioEndpoint, &minio.Options{
+	client, err := minio.New(config.Env.MinioEndpoint, &minio.Options{
 		Creds:  credentials.NewStaticV4(config.Env.MinioAccessKey, config.Env.MinioSecretKey, ""),
 		Secure: useSSL,
 	})
 
 	if err != nil {
-		log.Println("Error initializing Minio client:", err)
-		return nil, err
+		log.Fatalln("Error initializing Minio client:", err)
+	} else {
+		MinioClient = client
 	}
-
-	return MinioClient, nil
 }

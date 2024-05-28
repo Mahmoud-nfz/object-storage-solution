@@ -20,7 +20,8 @@ func TranscodeVideo(inputPath, outputPath, codec string) error {
         ErrorToStdOut().
         Run()
     if err != nil {
-        return log.Errorf("failed to transcode video: %v", err)
+        log.Println("failed to transcode video: ", err)
+        return err
     }
     return nil
 }
@@ -40,19 +41,19 @@ func HandleTranscodeVideo(c *gin.Context) {
 
     err := storage.MinioClient.FGetObject(context.Background(), bucketName, objectName, inputFilePath, minio.GetObjectOptions{})
     if err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": log.Sprintf("failed to download video: %v", err)})
+        log.Println("failed to download video: ", err)
         return
     }
 
     err = TranscodeVideo(inputFilePath, outputFilePath, codec)
     if err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": log.Sprintf("failed to transcode video: %v", err)})
+       log.Println("failed to transcode video: ", err)
         return
     }
 
     _, err = storage.MinioClient.FPutObject(context.Background(), bucketName, outputObjectName, outputFilePath, minio.PutObjectOptions{})
     if err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": log.Sprintf("failed to upload video: %v", err)})
+       log.Println("failed to upload video: ", err)
         return
     }
 

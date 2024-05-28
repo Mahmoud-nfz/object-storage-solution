@@ -4,7 +4,7 @@ import (
 	"data-storage/src/storage"
 	websockets "data-storage/src/websockets/handlers"
 	"net/http"
-	"data-storage/src/ffmpeg"
+	ffmpeg "data-storage/src/ffmpeg"
 	"github.com/gin-gonic/gin"
 )
 

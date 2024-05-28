@@ -6,7 +6,7 @@ import (
     "net/http"
     "os"
     "path/filepath"
-
+    "fmt"
     "github.com/gin-gonic/gin"
     "github.com/minio/minio-go/v7"
     ffmpeg "github.com/u2takey/ffmpeg-go"
@@ -25,7 +25,8 @@ func ConcatVideos(inputPaths []string, outputPath string) error {
         ErrorToStdOut().
         Run()
     if err != nil {
-        return log.Errorf("failed to concatenate videos: %v", err)
+        log.Println("failed to concatenate videos: ", err)
+        return err
     }
     return nil
 }
@@ -43,10 +44,11 @@ func HandleConcatVideos(c *gin.Context) {
     tempDir := os.TempDir()
     inputFilePaths := make([]string, len(inputObjectNames))
     for i, objectName := range inputObjectNames {
-        inputFilePaths[i] = filepath.Join(tempDir, log.Sprintf("input-video-%d.mp4", i))
+        inputFilePaths[i] = filepath.Join(tempDir, fmt.Sprintf("input-video-%d.mp4", i))
         err := storage.MinioClient.FGetObject(context.Background(), bucketName, objectName, inputFilePaths[i], minio.GetObjectOptions{})
         if err != nil {
-            c.JSON(http.StatusInternalServerError, gin.H{"error": log.Sprintf("failed to download video %s: %v", objectName, err)})
+            log.Println("failed to download video ", objectName, ": ", err)
+            c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to download video"})
             return
         }
     }
@@ -55,13 +57,15 @@ func HandleConcatVideos(c *gin.Context) {
 
     err := ConcatVideos(inputFilePaths, outputFilePath)
     if err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": log.Sprintf("failed to concatenate videos: %v", err)})
+        log.Println("failed to concatenate videos: ", err)
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to concatenate videos"})
         return
     }
 
     _, err = storage.MinioClient.FPutObject(context.Background(), bucketName, outputObjectName, outputFilePath, minio.PutObjectOptions{})
     if err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": log.Sprintf("failed to upload video: %v", err)})
+        log.Println("failed to upload video: ", err)
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to upload video"})
         return
     }
 

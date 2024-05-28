@@ -25,7 +25,8 @@ func TrimVideo(inputPath, outputPath string, start, duration int) error {
         Run()
 
     if err != nil {
-        return log.Errorf("failed to trim video: %v", err)
+        log.Println("failed to trim video: ", err)
+        return err
     }
     return nil
 }
@@ -51,19 +52,19 @@ func HandleTrimVideo(c *gin.Context) {
 
     err = storage.MinioClient.FGetObject(context.Background(), bucketName, objectName, inputFilePath, minio.GetObjectOptions{})
     if err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": log.Sprintf("failed to download video: %v", err)})
+       log.Println("failed to download video: ", err)
         return
     }
 
     err = TrimVideo(inputFilePath, outputFilePath, startIdx, duration)
     if err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": log.Sprintf("failed to trim video: %v", err)})
+        log.Println("failed to trim video: ", err)
         return
     }
 
     _, err = storage.MinioClient.FPutObject(context.Background(), bucketName, "trimmed-"+objectName, outputFilePath, minio.PutObjectOptions{})
     if err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": log.Sprintf("failed to upload video: %v", err)})
+        log.Println("failed to upload video: ", err)
         return
     }
 

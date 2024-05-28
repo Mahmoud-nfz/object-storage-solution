@@ -20,13 +20,13 @@ func ParseDuration(durationStr string) (time.Duration, error) {
 	}
 
 	if unit == "" || numberStr == "" {
-		return 0, fmt.Errorf("invalid duration format: %s", durationStr)
+		return 0, log.Errorf("invalid duration format: %s", durationStr)
 	}
 
 	// Convert the number part to an integer
 	number, err := strconv.Atoi(numberStr)
 	if err != nil {
-		return 0, fmt.Errorf("invalid duration format: %s", durationStr)
+		return 0, log.Errorf("invalid duration format: %s", durationStr)
 	}
 
 	// Map unit to time.Duration
@@ -43,7 +43,7 @@ func ParseDuration(durationStr string) (time.Duration, error) {
 	case "d":
 		duration = time.Duration(number) * 24 * time.Hour
 	default:
-		return 0, fmt.Errorf("unsupported unit: %s", unit)
+		return 0, log.Errorf("unsupported unit: %s", unit)
 	}
 
 	return duration, nil

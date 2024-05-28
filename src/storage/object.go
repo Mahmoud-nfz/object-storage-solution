@@ -59,7 +59,7 @@ func CopyObjectToBucket(c *gin.Context) {
 	bucketName := c.Param("name")
 	destination := c.Param("destination")
 	objectName := c.Param("object")
-	fmt.Println("copie")
+
 	src := minio.CopySrcOptions{
 		Bucket: bucketName,
 		Object: objectName,
@@ -68,11 +68,8 @@ func CopyObjectToBucket(c *gin.Context) {
 		Bucket: destination,
 		Object: objectName,
 	}
-	fmt.Println("copie", src, dst)
-	// if err := makeBucket(c, destination); err != nil {
-	// 	c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-	// 	return
-	// }
+	fmt.Println("copy", src, dst)
+
 	c.JSON(http.StatusOK, gin.H{"message": "Copying object..."})
 	_, err := MinioClient.CopyObject(context.Background(), dst, src)
 	if err != nil {

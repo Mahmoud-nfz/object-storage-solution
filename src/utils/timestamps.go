@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-func hmsToSeconds(hms string) (int, error) {
+func HmsToSeconds(hms string) (int, error) {
     parts := strings.Split(hms, ":")
     if len(parts) != 3 {
         return 0, fmt.Errorf("invalid time format")
@@ -26,7 +26,7 @@ func hmsToSeconds(hms string) (int, error) {
     return hours*3600 + minutes*60 + seconds, nil
 }
 
-func secondsToHMS(seconds int) string {
+func SecondsToHMS(seconds int) string {
     hours := seconds / 3600
     minutes := (seconds % 3600) / 60
     secs := seconds % 60

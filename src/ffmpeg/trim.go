@@ -15,8 +15,8 @@ import (
 )
 
 func TrimVideo(inputPath, outputPath string, start, duration int) error {
-    startHMS := utils.secondsToHMS(start)
-    durationHMS := utils.secondsToHMS(duration)
+    startHMS := utils.SecondsToHMS(start)
+    durationHMS := utils.SecondsToHMS(duration)
 
     err := ffmpeg.Input(inputPath, ffmpeg.KwArgs{"ss": startHMS}).
         Output(outputPath, ffmpeg.KwArgs{"t": durationHMS}).
@@ -33,12 +33,12 @@ func TrimVideo(inputPath, outputPath string, start, duration int) error {
 func HandleTrimVideo(c *gin.Context) {
     bucketName := c.Param("bucketName")
     objectName := c.Param("objectName")
-    startIdx, err := utils.hmsToSeconds(c.Param("startIdx"))
+    startIdx, err := utils.HmsToSeconds(c.Param("startIdx"))
     if err != nil {
         c.JSON(http.StatusBadRequest, gin.H{"error": "invalid start index"})
         return
     }
-    endIdx, err := utils.hmsToSeconds(c.Param("endIdx"))
+    endIdx, err := utils.HmsToSeconds(c.Param("endIdx"))
     if err != nil {
         c.JSON(http.StatusBadRequest, gin.H{"error": "invalid end index"})
         return

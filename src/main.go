@@ -13,7 +13,7 @@ var router *gin.Engine
 func main() {
 	
 	if _, err := storage.InitializeMinioClient(); err != nil {
-		log.Fatalln("Error initializing Minio client:", err)
+		log.Println("Error initializing Minio client:", err)
 	}
 
 	router = gin.Default()
@@ -22,6 +22,6 @@ func main() {
 
 	err := router.Run(":1206")
 	if err != nil {
-		log.Fatalln("Error starting server:", err)
+		log.Println("Error starting server:", err)
 	}
 }

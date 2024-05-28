@@ -36,7 +36,7 @@ func init() {
 	}
 }
 
-// Helper function to read an environment variable or return a default value
+// Helper function to read an environment variable
 func getEnv(key string) string {
 	value, exists := os.LookupEnv(key)
 	if !exists {
@@ -54,7 +54,7 @@ func getEnvWithDefaultValue(key, defaultValue string) string {
 	return value
 }
 
-// Helper function to read an environment variable or return a default value
+// Helper function to read an environment variable and then transform it
 func getEnvWithTransformer[T any](key string, transformer transformer[T]) T {
 	value, exists := os.LookupEnv(key)
 	if !exists {
@@ -63,7 +63,7 @@ func getEnvWithTransformer[T any](key string, transformer transformer[T]) T {
 	return transformer(key, value)
 }
 
-// Helper function to read an environment variable or return a default value
+// Helper function to read an environment variable and then transform it or the default value
 func getEnvWithTransformerAndDefaultValue[T any](key string, transformer transformer[T], defaultValue string) T {
 	value, exists := os.LookupEnv(key)
 	if !exists {

@@ -45,5 +45,4 @@ func initializeRoutes() {
 		ffmpegRoutes.POST("/transcode/:bucketName/:objectName/:outputObjectName", ffmpeg.HandleTranscodeVideo)
 		ffmpegRoutes.POST("/concat/:bucketName/:outputObjectName/", ffmpeg.HandleConcatVideos)
 	}
-	err = r.Run(":1206")
 }

@@ -11,7 +11,7 @@ RUN go mod download
 COPY src/ ./src/
 
 # Build the application
-RUN CGO_ENABLED=0 GOOS=linux go build -o main ./src/main.go
+RUN CGO_ENABLED=0 GOOS=linux go build -o main ./src
 
 # Stage 2: Setup the runtime container
 FROM alpine:latest  
@@ -23,12 +23,6 @@ WORKDIR /root/
 
 # Copy the pre-built binary file from the previous stage
 COPY --from=builder /app/main .
-
-# Copy the .env file into the container
-COPY .env .
-
-# Expose the necessary port
-EXPOSE 1206
 
 # Run the application
 CMD ["./main"]

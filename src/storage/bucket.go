@@ -35,5 +35,5 @@ func ListBucketObjects(c *gin.Context) {
 		objects = append(objects, object.Key)
 	}
 	fmt.Println(objects)
-	c.JSON(http.StatusOK, gin.H{"objects": objects})
+	c.JSON(http.StatusOK, gin.H{"data": objects})
 }

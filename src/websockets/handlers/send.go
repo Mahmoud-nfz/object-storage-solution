@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"context"
 	"data-storage/src/storage"
+	"data-storage/src/websockets"
 	"encoding/json"
 	"io"
 	"log"
-	"net/http"
 
+	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"github.com/minio/minio-go/v7"
 )
@@ -18,8 +19,10 @@ type Message struct {
 	FileName   string `json:"fileName"`
 }
 
-func WebsocketSendObjectHandler(w http.ResponseWriter, r *http.Request) {
-	conn, err := Upgrader.Upgrade(w, r, nil)
+func WebsocketSendObjectHandler(c *gin.Context) {
+	w := c.Writer
+	r := c.Request
+	conn, err := websockets.Upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println("Upgrade:", err)
 		return

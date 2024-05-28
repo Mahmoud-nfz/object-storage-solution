@@ -7,6 +7,8 @@ import (
     "os"
     "path/filepath"
     "strconv"
+    "strings"
+    "time"
 
     "github.com/gin-gonic/gin"
     "github.com/minio/minio-go/v7"
@@ -14,10 +16,36 @@ import (
     "data-storage/src/storage"
 )
 
+func hmsToSeconds(hms string) (int, error) {
+    parts := strings.Split(hms, ":")
+    if len(parts) != 3 {
+        return 0, fmt.Errorf("invalid time format")
+    }
+    hours, err := strconv.Atoi(parts[0])
+    if err != nil {
+        return 0, err
+    }
+    minutes, err := strconv.Atoi(parts[1])
+    if err != nil {
+        return 0, err
+    }
+    seconds, err := strconv.Atoi(parts[2])
+    if err != nil {
+        return 0, err
+    }
+    return hours*3600 + minutes*60 + seconds, nil
+}
+
+func secondsToHMS(seconds int) string {
+    return time.Duration(seconds * int(time.Second)).String()
+}
 
 func TrimVideo(inputPath, outputPath string, start, duration int) error {
-    err := ffmpeg.Input(inputPath, ffmpeg.KwArgs{"ss": start}).
-        Output(outputPath, ffmpeg.KwArgs{"t": duration}).
+    startHMS := secondsToHMS(start)
+    durationHMS := secondsToHMS(duration)
+
+    err := ffmpeg.Input(inputPath, ffmpeg.KwArgs{"ss": startHMS}).
+        Output(outputPath, ffmpeg.KwArgs{"t": durationHMS}).
         OverWriteOutput().
         ErrorToStdOut().
         Run()
@@ -31,12 +59,12 @@ func TrimVideo(inputPath, outputPath string, start, duration int) error {
 func HandleTrimVideo(c *gin.Context) {
     bucketName := c.Param("bucketName")
     objectName := c.Param("objectName")
-    startIdx, err := strconv.Atoi(c.Param("startIdx"))
+    startIdx, err := hmsToSeconds(c.Param("startIdx"))
     if err != nil {
         c.JSON(http.StatusBadRequest, gin.H{"error": "invalid start index"})
         return
     }
-    endIdx, err := strconv.Atoi(c.Param("endIdx"))
+    endIdx, err := hmsToSeconds(c.Param("endIdx"))
     if err != nil {
         c.JSON(http.StatusBadRequest, gin.H{"error": "invalid end index"})
         return
@@ -59,7 +87,7 @@ func HandleTrimVideo(c *gin.Context) {
         return
     }
 
-    _,err = storage.MinioClient.FPutObject(context.Background(), bucketName, "trimmed-"+objectName, outputFilePath, minio.PutObjectOptions{})
+    _, err = storage.MinioClient.FPutObject(context.Background(), bucketName, "trimmed-"+objectName, outputFilePath, minio.PutObjectOptions{})
     if err != nil {
         c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to upload video: %v", err)})
         return

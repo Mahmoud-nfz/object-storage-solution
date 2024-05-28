@@ -1,10 +1,11 @@
-package websockets
+package handlers
 
 import (
+	"data-storage/src/websockets"
+	"data-storage/src/storage"
+
 	"bytes"
 	"context"
-	"data-storage/src/storage"
-	"data-storage/src/websockets"
 	"encoding/json"
 	"io"
 	"log"

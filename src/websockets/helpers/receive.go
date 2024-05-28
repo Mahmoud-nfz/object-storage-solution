@@ -1,8 +1,9 @@
-package websockets
+package helpers
 
 import (
 	"data-storage/src/storage"
 	"data-storage/src/utils"
+
 	"log"
 	"net/http"
 	"os"

@@ -2,7 +2,7 @@ package storage
 
 import (
 	"context"
-	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -34,6 +34,6 @@ func ListBucketObjects(c *gin.Context) {
 		}
 		objects = append(objects, object.Key)
 	}
-	fmt.Println(objects)
+	log.Println(objects)
 	c.JSON(http.StatusOK, gin.H{"data": objects})
 }

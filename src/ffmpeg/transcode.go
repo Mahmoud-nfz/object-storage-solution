@@ -2,14 +2,14 @@ package ffmpeg
 
 import (
     "context"
-    "fmt"
+    "log"
     "net/http"
     "os"
     "path/filepath"
     
     "github.com/gin-gonic/gin"
     "github.com/minio/minio-go/v7"
-    ffmpeg"github.com/u2takey/ffmpeg-go"
+    ffmpeg "github.com/u2takey/ffmpeg-go"
     "data-storage/src/storage"
 )
 
@@ -20,7 +20,7 @@ func TranscodeVideo(inputPath, outputPath, codec string) error {
         ErrorToStdOut().
         Run()
     if err != nil {
-        return fmt.Errorf("failed to transcode video: %v", err)
+        return log.Errorf("failed to transcode video: %v", err)
     }
     return nil
 }
@@ -40,19 +40,19 @@ func HandleTranscodeVideo(c *gin.Context) {
 
     err := storage.MinioClient.FGetObject(context.Background(), bucketName, objectName, inputFilePath, minio.GetObjectOptions{})
     if err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to download video: %v", err)})
+        c.JSON(http.StatusInternalServerError, gin.H{"error": log.Sprintf("failed to download video: %v", err)})
         return
     }
 
     err = TranscodeVideo(inputFilePath, outputFilePath, codec)
     if err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to transcode video: %v", err)})
+        c.JSON(http.StatusInternalServerError, gin.H{"error": log.Sprintf("failed to transcode video: %v", err)})
         return
     }
 
     _, err = storage.MinioClient.FPutObject(context.Background(), bucketName, outputObjectName, outputFilePath, minio.PutObjectOptions{})
     if err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to upload video: %v", err)})
+        c.JSON(http.StatusInternalServerError, gin.H{"error": log.Sprintf("failed to upload video: %v", err)})
         return
     }
 

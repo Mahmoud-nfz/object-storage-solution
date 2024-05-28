@@ -2,7 +2,7 @@ package storage
 
 import (
 	"context"
-	"fmt"
+	"log"
 	"net/http"
 	"io/ioutil"
 	"github.com/gin-gonic/gin"
@@ -32,10 +32,11 @@ func DeleteObject(c *gin.Context) {
 	objectName := c.Param("objectName")
 	err := MinioClient.RemoveObject(context.Background(), bucketName, objectName, minio.RemoveObjectOptions{})
 	if err != nil {
+		log.Println("Error:", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": fmt.Sprintf("Object %s deleted successfully", objectName)})
+	c.JSON(http.StatusOK, gin.H{"message": "Object deleted successfully"})
 }
 
 func RenameObject(c *gin.Context) {
@@ -44,6 +45,7 @@ func RenameObject(c *gin.Context) {
 		NewName string `json:"newName"`
 	}
 	if err := c.BindJSON(&renameRequest); err != nil {
+		log.Println("Error:", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -60,12 +62,14 @@ func RenameObject(c *gin.Context) {
 
 	_, err := MinioClient.CopyObject(context.Background(), dst, src)
 	if err != nil {
+		log.Println("Error:", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
 	err = MinioClient.RemoveObject(context.Background(), bucketName, renameRequest.OldName, minio.RemoveObjectOptions{})
 	if err != nil {
+		log.Println("Error:", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -77,7 +81,7 @@ func CopyObjectToBucket(c *gin.Context) {
 	bucketName := c.Param("name")
 	destination := c.Param("destination")
 	objectName := c.Param("object")
-	fmt.Println("copie")
+	log.Println("Copying object...")
 	src := minio.CopySrcOptions{
 		Bucket: bucketName,
 		Object: objectName,
@@ -86,14 +90,16 @@ func CopyObjectToBucket(c *gin.Context) {
 		Bucket: destination,
 		Object: objectName,
 	}
-	fmt.Println("copie", src, dst)
+	log.Println("Copying object:", src, dst)
 	// if err := makeBucket(c, destination); err != nil {
+	// 	log.Println("Error:", err)
 	// 	c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 	// 	return
 	// }
 	c.JSON(http.StatusOK, gin.H{"message": "Copying object..."})
 	_, err := MinioClient.CopyObject(context.Background(), dst, src)
 	if err != nil {
+		log.Println("Error:", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

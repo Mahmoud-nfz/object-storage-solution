@@ -2,7 +2,7 @@ package ffmpeg
 
 import (
     "context"
-    "fmt"
+    "log"
     "net/http"
     "os"
     "path/filepath"
@@ -25,7 +25,7 @@ func TrimVideo(inputPath, outputPath string, start, duration int) error {
         Run()
 
     if err != nil {
-        return fmt.Errorf("failed to trim video: %v", err)
+        return log.Errorf("failed to trim video: %v", err)
     }
     return nil
 }
@@ -44,26 +44,26 @@ func HandleTrimVideo(c *gin.Context) {
         return
     }
     duration := endIdx - startIdx
-    fmt.Sprintf("duration: %d", duration)
+    log.Printf("duration: %d", duration)
 
     inputFilePath := filepath.Join(os.TempDir(), "input-video.mp4")
     outputFilePath := filepath.Join(os.TempDir(), "output-video.mp4")
 
     err = storage.MinioClient.FGetObject(context.Background(), bucketName, objectName, inputFilePath, minio.GetObjectOptions{})
     if err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to download video: %v", err)})
+        c.JSON(http.StatusInternalServerError, gin.H{"error": log.Sprintf("failed to download video: %v", err)})
         return
     }
 
     err = TrimVideo(inputFilePath, outputFilePath, startIdx, duration)
     if err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to trim video: %v", err)})
+        c.JSON(http.StatusInternalServerError, gin.H{"error": log.Sprintf("failed to trim video: %v", err)})
         return
     }
 
     _, err = storage.MinioClient.FPutObject(context.Background(), bucketName, "trimmed-"+objectName, outputFilePath, minio.PutObjectOptions{})
     if err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to upload video: %v", err)})
+        c.JSON(http.StatusInternalServerError, gin.H{"error": log.Sprintf("failed to upload video: %v", err)})
         return
     }
 

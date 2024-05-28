@@ -12,6 +12,8 @@ require (
 	github.com/u2takey/ffmpeg-go v0.5.0
 )
 
+require github.com/golang-jwt/jwt/v5 v5.2.1
+
 require (
 	github.com/aws/aws-sdk-go v1.53.10 // indirect
 	github.com/bytedance/sonic v1.9.1 // indirect

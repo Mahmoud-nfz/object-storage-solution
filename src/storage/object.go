@@ -81,7 +81,6 @@ func CopyObjectToBucket(c *gin.Context) {
 	bucketName := c.Param("name")
 	destination := c.Param("destination")
 	objectName := c.Param("object")
-	log.Println("Copying object...")
 	src := minio.CopySrcOptions{
 		Bucket: bucketName,
 		Object: objectName,

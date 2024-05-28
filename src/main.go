@@ -1,8 +1,6 @@
 package main
 
 import (
-	"data-storage/src/storage"
-
 	"log"
 
 	"github.com/gin-gonic/gin"
@@ -11,10 +9,6 @@ import (
 var router *gin.Engine
 
 func main() {
-	
-	if _, err := storage.InitializeMinioClient(); err != nil {
-		log.Println("Error initializing Minio client:", err)
-	}
 
 	router = gin.Default()
 

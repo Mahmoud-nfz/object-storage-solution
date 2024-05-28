@@ -6,45 +6,17 @@ import (
     "net/http"
     "os"
     "path/filepath"
-    "strconv"
-    "strings"
 
     "github.com/gin-gonic/gin"
     "github.com/minio/minio-go/v7"
     ffmpeg "github.com/u2takey/ffmpeg-go"
     "data-storage/src/storage"
+    "data-storage/src/utils"
 )
 
-func hmsToSeconds(hms string) (int, error) {
-    parts := strings.Split(hms, ":")
-    if len(parts) != 3 {
-        return 0, fmt.Errorf("invalid time format")
-    }
-    hours, err := strconv.Atoi(parts[0])
-    if err != nil {
-        return 0, err
-    }
-    minutes, err := strconv.Atoi(parts[1])
-    if err != nil {
-        return 0, err
-    }
-    seconds, err := strconv.Atoi(parts[2])
-    if err != nil {
-        return 0, err
-    }
-    return hours*3600 + minutes*60 + seconds, nil
-}
-
-func secondsToHMS(seconds int) string {
-    hours := seconds / 3600
-    minutes := (seconds % 3600) / 60
-    secs := seconds % 60
-    return fmt.Sprintf("%02d:%02d:%02d", hours, minutes, secs)
-}
-
 func TrimVideo(inputPath, outputPath string, start, duration int) error {
-    startHMS := secondsToHMS(start)
-    durationHMS := secondsToHMS(duration)
+    startHMS := utils.secondsToHMS(start)
+    durationHMS := utils.secondsToHMS(duration)
 
     err := ffmpeg.Input(inputPath, ffmpeg.KwArgs{"ss": startHMS}).
         Output(outputPath, ffmpeg.KwArgs{"t": durationHMS}).
@@ -61,12 +33,12 @@ func TrimVideo(inputPath, outputPath string, start, duration int) error {
 func HandleTrimVideo(c *gin.Context) {
     bucketName := c.Param("bucketName")
     objectName := c.Param("objectName")
-    startIdx, err := hmsToSeconds(c.Param("startIdx"))
+    startIdx, err := utils.hmsToSeconds(c.Param("startIdx"))
     if err != nil {
         c.JSON(http.StatusBadRequest, gin.H{"error": "invalid start index"})
         return
     }
-    endIdx, err := hmsToSeconds(c.Param("endIdx"))
+    endIdx, err := utils.hmsToSeconds(c.Param("endIdx"))
     if err != nil {
         c.JSON(http.StatusBadRequest, gin.H{"error": "invalid end index"})
         return

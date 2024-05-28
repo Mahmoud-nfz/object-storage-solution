@@ -25,6 +25,9 @@ func main() {
 
 	initializeRoutes()
 
-	router.Run(":1206")
+	err := router.Run(":1206")
+	if err != nil {
+		log.Fatalln("Error starting server:", err)
+	}
 
 }

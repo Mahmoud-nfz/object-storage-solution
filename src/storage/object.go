@@ -1,65 +1,59 @@
 package storage
 
 import (
+	"bytes"
 	"context"
-	"fmt"
-	"net/http"
 
-	"github.com/gin-gonic/gin"
 	"github.com/minio/minio-go/v7"
 )
 
-func DeleteObject(c *gin.Context) {
-	bucketName := c.Param("name")
-	objectName := c.Param("objectName")
-	err := MinioClient.RemoveObject(context.Background(), bucketName, objectName, minio.RemoveObjectOptions{})
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
+func MakeObject(bucketName, objectName string, data []byte) error {
+	reader := bytes.NewReader(data)
+	opts := minio.PutObjectOptions{
+		ContentType: "application/octet-stream",
 	}
-	c.JSON(http.StatusOK, gin.H{"message": fmt.Sprintf("Object %s deleted successfully", objectName)})
+	_, err := MinioClient.PutObject(context.Background(), bucketName, objectName, reader, int64(len(data)), opts)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
-func RenameObject(c *gin.Context) {
-	var renameRequest struct {
-		OldName string `json:"oldName"`
-		NewName string `json:"newName"`
-	}
-	if err := c.BindJSON(&renameRequest); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
+func DeleteObject(bucketName, objectName string) error {
+	opts := minio.RemoveObjectOptions{}
+	err := MinioClient.RemoveObject(context.Background(), bucketName, objectName, opts)
+	if err != nil {
+		return err
 	}
 
-	bucketName := c.Param("name")
+	return nil
+}
+
+func RenameObject(bucketName, oldName, newName string) error {
 	src := minio.CopySrcOptions{
 		Bucket: bucketName,
-		Object: renameRequest.OldName,
+		Object: oldName,
 	}
 	dst := minio.CopyDestOptions{
 		Bucket: bucketName,
-		Object: renameRequest.NewName,
+		Object: newName,
 	}
-
 	_, err := MinioClient.CopyObject(context.Background(), dst, src)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
+		return err
 	}
 
-	err = MinioClient.RemoveObject(context.Background(), bucketName, renameRequest.OldName, minio.RemoveObjectOptions{})
+	opts := minio.RemoveObjectOptions{}
+	err = MinioClient.RemoveObject(context.Background(), bucketName, oldName, opts)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
+		return err
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Object renamed successfully"})
+	return nil
 }
 
-func CopyObjectToBucket(c *gin.Context) {
-	bucketName := c.Param("name")
-	destination := c.Param("destination")
-	objectName := c.Param("object")
-
+func CopyObjectToBucket(bucketName, destination, objectName string) error {
 	src := minio.CopySrcOptions{
 		Bucket: bucketName,
 		Object: objectName,
@@ -68,14 +62,12 @@ func CopyObjectToBucket(c *gin.Context) {
 		Bucket: destination,
 		Object: objectName,
 	}
-	fmt.Println("copy", src, dst)
 
-	c.JSON(http.StatusOK, gin.H{"message": "Copying object..."})
 	_, err := MinioClient.CopyObject(context.Background(), dst, src)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
+		return err
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Object copied successfully"})
+	return nil
 }
+

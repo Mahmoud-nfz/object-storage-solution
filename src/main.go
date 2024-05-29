@@ -16,7 +16,6 @@ func main() {
 
 	err := router.Run(":1206")
 	if err != nil {
-		log.Fatalln("Error starting server:", err)
+		log.Println("Error starting server:", err)
 	}
-
 }

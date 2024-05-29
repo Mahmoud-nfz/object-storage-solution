@@ -1,9 +1,11 @@
 package main
 
-import (
+import ( 
 	"data-storage/src/auth"
 	"data-storage/src/storage"
 	websockets "data-storage/src/websockets/handlers"
+	"data-storage/src/ffmpeg"
+
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -26,9 +28,9 @@ func initializeRoutes() {
 		c.Next()
 	})
 
-	router.GET("/download", auth.EnsureUserAuthenticated(), websockets.WebsocketSendObjectHandler)
+	router.GET("/download", auth.EnsureBackendAuthenticated(), websockets.WebsocketSendObjectHandler)
 
-	router.GET("/upload", auth.EnsureUserAuthenticated(), websockets.WebsocketReceiveObjectHandler)
+	router.GET("/upload", auth.EnsureBackendAuthenticated(), websockets.WebsocketReceiveObjectHandler)
 
 	bucketRoutes := router.Group("/bucket", auth.EnsureBackendAuthenticated())
 	{
@@ -39,5 +41,11 @@ func initializeRoutes() {
 		bucketRoutes.POST("/:name/object/rename", storage.RenameObject)
 
 		bucketRoutes.POST("/:name/:destination/:object", storage.CopyObjectToBucket)
+	}
+	ffmpegRoutes := router.Group("/ffmpeg", auth.EnsureBackendAuthenticated())
+	{
+		ffmpegRoutes.POST("/trim/:bucketName/:objectName/:startIdx/:endIdx/:download/:save", ffmpeg.HandleTrimVideo)
+		ffmpegRoutes.POST("/transcode/:bucketName/:objectName/:outputObjectName", ffmpeg.HandleTranscodeVideo)
+		ffmpegRoutes.POST("/concat/:bucketName/:outputObjectName/", ffmpeg.HandleConcatVideos)
 	}
 }

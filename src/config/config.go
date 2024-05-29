@@ -39,7 +39,7 @@ func init() {
 func getEnv(key string) string {
 	value, exists := os.LookupEnv(key)
 	if !exists {
-		log.Fatalln("Environment variable ", key, " is required but not set")
+		log.Println("Environment variable ", key, " is required but not set")
 	}
 	return value
 }
@@ -57,7 +57,7 @@ func getEnvWithDefaultValue(key, defaultValue string) string {
 func getEnvWithTransformer[T any](key string, transformer transformer[T]) T {
 	value, exists := os.LookupEnv(key)
 	if !exists {
-		log.Fatalln("Environment variable ", key, " is required but not set")
+		log.Println("Environment variable ", key, " is required but not set")
 	}
 	return transformer(key, value)
 }

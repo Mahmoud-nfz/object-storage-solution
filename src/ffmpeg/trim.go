@@ -6,12 +6,13 @@ import (
     "net/http"
     "os"
     "path/filepath"
-
+    "data-storage/src/storage"
+    "data-storage/src/websockets"
+    "data-storage/src/utils"
+    "data-storage/src/websockets/handlers"
     "github.com/gin-gonic/gin"
     "github.com/minio/minio-go/v7"
     ffmpeg "github.com/u2takey/ffmpeg-go"
-    "data-storage/src/storage"
-    "data-storage/src/utils"
 )
 
 func TrimVideo(inputPath, outputPath string, start, duration int) error {
@@ -34,6 +35,8 @@ func TrimVideo(inputPath, outputPath string, start, duration int) error {
 func HandleTrimVideo(c *gin.Context) {
     bucketName := c.Param("bucketName")
     objectName := c.Param("objectName")
+    download := c.Param("download")
+    save := c.Param("save")
     startIdx, err := utils.HmsToSeconds(c.Param("startIdx"))
     if err != nil {
         c.JSON(http.StatusBadRequest, gin.H{"error": "invalid start index"})
@@ -53,20 +56,42 @@ func HandleTrimVideo(c *gin.Context) {
     err = storage.MinioClient.FGetObject(context.Background(), bucketName, objectName, inputFilePath, minio.GetObjectOptions{})
     if err != nil {
        log.Println("failed to download video: ", err)
-        return
+       c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to download video"})
+       return
     }
 
     err = TrimVideo(inputFilePath, outputFilePath, startIdx, duration)
     if err != nil {
         log.Println("failed to trim video: ", err)
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to trim video"})
         return
     }
 
-    _, err = storage.MinioClient.FPutObject(context.Background(), bucketName, "trimmed-"+objectName, outputFilePath, minio.PutObjectOptions{})
+    if save == "true" {
+        _, err = storage.MinioClient.FPutObject(context.Background(), bucketName, "trimmed-"+objectName, outputFilePath, minio.PutObjectOptions{})
+        if err != nil {
+            log.Println("failed to upload video: ", err)
+            c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to upload video"})
+            return
+        }
+    }
+
+    if download == "true" {
+        WebsocketSendTrimmedVideo(c, outputFilePath, bucketName)
+    } else {
+        c.JSON(http.StatusOK, gin.H{"message": "Video trimmed successfully"})
+    }
+}
+
+func WebsocketSendTrimmedVideo(c *gin.Context, filePath, bucketName string) {
+    w := c.Writer
+    r := c.Request
+    conn, err := websockets.Upgrader.Upgrade(w, r, nil)
+
+    fileName := filepath.Base(filePath)
+    err = handlers.DownloadAndSendFileChunks(conn, fileName, bucketName)
     if err != nil {
-        log.Println("failed to upload video: ", err)
-        return
+        log.Println("Error downloading and sending file chunks:", err)
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Error sending file chunks"})
     }
-
-    c.JSON(http.StatusOK, gin.H{"message": "Video trimmed successfully"})
 }

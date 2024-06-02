@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"time"
@@ -15,6 +16,8 @@ type Config struct {
 	MinioEndpoint  string
 	MinioSecretKey string
 	APIKey         string
+	ChunkSize      int64
+	BackendUrl     string
 }
 
 var Env *Config
@@ -32,6 +35,8 @@ func init() {
 		MinioEndpoint:  getEnv("MINIO_ENDPOINT"),
 		MinioSecretKey: getEnv("MINIO_SECRET_KEY"),
 		APIKey:         getEnv("API_KEY"),
+		ChunkSize:      getEnvWithTransformerAndDefaultValue("CHUNK_SIZE", chunkSizeTransformer, fmt.Sprintf("%d", 1024*1024*5)),
+		BackendUrl:     getEnv("BACKEND_URL"),
 	}
 }
 

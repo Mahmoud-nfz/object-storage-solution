@@ -11,8 +11,12 @@ import (
 )
 
 type JWTPayload struct {
+	ID     string `json:"id"`
 	UserID string `json:"userId"`
 	Hash   string `json:"hash"`
+	Size   int64  `json:"size,string"`
+	Path   string `json:"path"`
+	Name   string `json:"name"`
 	jwt.RegisteredClaims
 }
 
@@ -26,6 +30,7 @@ func verify(tokenString string) (*JWTPayload, error) {
 		return config.Env.JWTSecret, nil
 	})
 	if err != nil {
+		log.Println("Error parsing JSON: ", err)
 		return nil, err
 	}
 

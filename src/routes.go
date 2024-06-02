@@ -2,8 +2,10 @@ package main
 
 import (
 	"data-storage/src/auth"
-	"data-storage/src/storage"
-	websockets "data-storage/src/websockets/handlers"
+	httpHandlers "data-storage/src/http/handlers"
+	"data-storage/src/websockets"
+	websocketHandlers "data-storage/src/websockets/handlers"
+
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -26,18 +28,21 @@ func initializeRoutes() {
 		c.Next()
 	})
 
-	router.GET("/download", auth.EnsureUserAuthenticated(), websockets.WebsocketSendObjectHandler)
+	websocketRoutes := router.Group("/", websockets.WebSocketUpgrade(), auth.EnsureUserAuthenticated())
+	{
+		websocketRoutes.GET("/download", websocketHandlers.WebsocketSendObjectHandler)
 
-	router.GET("/upload", auth.EnsureUserAuthenticated(), websockets.WebsocketReceiveObjectHandler)
+		websocketRoutes.GET("/upload", websocketHandlers.WebsocketReceiveObjectHandler)
+	}
 
 	bucketRoutes := router.Group("/bucket", auth.EnsureBackendAuthenticated())
 	{
-		bucketRoutes.GET("/:name/objects", storage.ListBucketObjects)
+		bucketRoutes.GET("/:name/objects/:prefix", httpHandlers.ListBucketObjects)
 
-		bucketRoutes.DELETE("/:name/object/:objectName", storage.DeleteObject)
+		bucketRoutes.DELETE("/:name/object/:objectName", httpHandlers.DeleteObject)
 
-		bucketRoutes.POST("/:name/object/rename", storage.RenameObject)
+		bucketRoutes.POST("/:name/object/rename", httpHandlers.RenameObject)
 
-		bucketRoutes.POST("/:name/:destination/:object", storage.CopyObjectToBucket)
+		bucketRoutes.POST("/:name/:destination/:object", httpHandlers.CopyObjectToBucket)
 	}
 }

@@ -1,12 +1,12 @@
 package handlers
 
 import (
+	"data-storage/src/auth"
 	"data-storage/src/storage"
-	"data-storage/src/websockets"
+	"fmt"
+	"path"
 
-	"bytes"
 	"context"
-	"encoding/json"
 	"io"
 	"log"
 
@@ -15,82 +15,53 @@ import (
 	"github.com/minio/minio-go/v7"
 )
 
-type Message struct {
-	BucketName string `json:"bucketName"`
-	FileName   string `json:"fileName"`
-}
-
-func WebsocketSendObjectHandler(c *gin.Context) {
-	w := c.Writer
-	r := c.Request
-	conn, err := websockets.Upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		log.Println("Upgrade:", err)
+func WebsocketSendObjectHandler(ctx *gin.Context) {
+	conn, ok := ctx.MustGet("conn").(*websocket.Conn)
+	if !ok {
+		log.Panicln("Failed to get WebSocket connection from context")
 		return
 	}
 	defer conn.Close()
 
-	for {
-		messageType, message, err := conn.ReadMessage()
-		if err != nil {
-			if err != io.EOF {
-				log.Println("Read:", err)
-			}
-			break
-		}
-
-		if messageType == websocket.TextMessage {
-			var msg Message
-			err := json.Unmarshal(message, &msg)
-			if err != nil {
-				log.Println("Error decoding JSON:", err)
-				continue
-			}
-
-			log.Printf("Download request for Bucket: %s, File: %s\n", msg.BucketName, msg.FileName)
-
-			err = DownloadAndSendFileChunks(conn, msg.FileName, msg.BucketName)
-			if err != nil {
-				log.Println("Error downloading and sending file chunks:", err)
-				continue
-			}
-
-			log.Println("File download completed")
-			break
-		}
+	fileInfo, ok := ctx.MustGet("claims").(*auth.JWTPayload)
+	if !ok {
+		log.Panicln("Failed to get claims from context")
+		return
 	}
+
+	// retrieve file from MinIO
+	bucketName := fmt.Sprintf("data-%s", fileInfo.DataCollectionID)
+	objectName := path.Join(fileInfo.Path, fileInfo.Name)
+	if err := downloadAndSendFile(conn, objectName, bucketName); err != nil {
+		log.Panicln("Could not download and send file: ", err)
+	}
+
+	log.Println("Done sending file")
 }
 
-func DownloadAndSendFileChunks(conn *websocket.Conn, fileName, bucketName string) error {
-
-	var fileChunks [][]byte
-	log.Println("Downloading file chunks")
-	object, err := storage.MinioClient.GetObject(context.Background(), bucketName, fileName, minio.GetObjectOptions{})
+func downloadAndSendFile(conn *websocket.Conn, objectName, bucketName string) error {
+	object, err := storage.MinioClient.GetObject(context.Background(), bucketName, objectName, minio.GetObjectOptions{})
 	if err != nil {
 		return err
 	}
-
 	defer object.Close()
 
-	stat, err := object.Stat()
-	if err != nil {
-		return err
-	}
+	// Buffer size for each chunk
+	const bufferSize = 64 * 1024 // 64KB
 
-	buffer := make([]byte, stat.Size)
-	n, err := io.ReadFull(object, buffer)
-	if err != nil {
-		if err != io.ErrUnexpectedEOF {
+	buffer := make([]byte, bufferSize)
+	for {
+		n, err := object.Read(buffer)
+		if err != nil && err != io.EOF {
 			return err
 		}
-	}
-	fileChunks = append(fileChunks, buffer[:n])
-	log.Printf("Downloaded %d bytes\n", n)
+		if n == 0 {
+			break
+		}
 
-	combinedFile := bytes.Join(fileChunks, []byte{})
-	err = conn.WriteMessage(websocket.BinaryMessage, combinedFile)
-	if err != nil {
-		return err
+		if err := conn.WriteMessage(websocket.BinaryMessage, buffer[:n]); err != nil {
+			return err
+		}
 	}
 
 	return nil

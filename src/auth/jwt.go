@@ -11,12 +11,13 @@ import (
 )
 
 type JWTPayload struct {
-	ID     string `json:"id"`
-	UserID string `json:"userId"`
-	Hash   string `json:"hash"`
-	Size   int64  `json:"size,string"`
-	Path   string `json:"path"`
-	Name   string `json:"name"`
+	ID               string `json:"id"`
+	UserID           string `json:"userId"`
+	Hash             string `json:"hash"`
+	Size             int64  `json:"size,string"`
+	Path             string `json:"path"`
+	Name             string `json:"name"`
+	DataCollectionID string `json:"dataCollectionId"`
 	jwt.RegisteredClaims
 }
 

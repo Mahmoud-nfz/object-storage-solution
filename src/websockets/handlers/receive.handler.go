@@ -56,6 +56,12 @@ func WebsocketReceiveObjectHandler(ctx *gin.Context) {
 		return
 	}
 
+	dataBucket := fmt.Sprintf("data-%s", fileInfo.DataCollectionID)
+	if err := storage.MakeBucket(dataBucket); err != nil {
+		log.Panicln("Failed to initialize bucket for this file")
+		return
+	}
+
 	objectPrefix := path.Join(fileInfo.Hash[0:2], fileInfo.Hash)
 
 	numChunks := uint64((fileInfo.Size + config.Env.ChunkSize - 1) / config.Env.ChunkSize)
@@ -88,7 +94,7 @@ func WebsocketReceiveObjectHandler(ctx *gin.Context) {
 	log.Println("Done uploading all chunks")
 
 	// Wait for final merge
-	go combineAndUploadFile(path.Join(fileInfo.Path, fileInfo.Name), objectPrefix, numChunks, &wg)
+	go combineAndUploadFile(dataBucket, path.Join(fileInfo.Path, fileInfo.Name), objectPrefix, numChunks, &wg)
 	wg.Wait()
 	log.Println("Done uploading file")
 
@@ -163,7 +169,7 @@ func handleMessage(message []byte, objectPrefix string, wg *sync.WaitGroup) {
 }
 
 // combines all chunks from the "uploads" bucket and puts the final file to the "data" bucket.
-func combineAndUploadFile(destinationPath, sourcePrefix string, numChunks uint64, wg *sync.WaitGroup) error {
+func combineAndUploadFile(dataBucket, destinationPath, sourcePrefix string, numChunks uint64, wg *sync.WaitGroup) error {
 	srcs := make([]minio.CopySrcOptions, numChunks)
 	for i := uint64(0); i < numChunks; i++ {
 		chunkFilePath := path.Join(sourcePrefix, fmt.Sprintf(chunkFilenameFormat, i))
@@ -173,7 +179,7 @@ func combineAndUploadFile(destinationPath, sourcePrefix string, numChunks uint64
 		}
 	}
 	dst := minio.CopyDestOptions{
-		Bucket: storage.DataBucket,
+		Bucket: dataBucket,
 		Object: destinationPath,
 	}
 	_, err := storage.ConcatenateObjects(dst, srcs...)
@@ -182,7 +188,7 @@ func combineAndUploadFile(destinationPath, sourcePrefix string, numChunks uint64
 		return err
 	}
 
-	log.Printf("Successfully composed and uploaded object: %s/%s", storage.DataBucket, destinationPath)
+	log.Printf("Successfully composed and uploaded object: %s/%s", dataBucket, destinationPath)
 	wg.Done()
 	return nil
 }

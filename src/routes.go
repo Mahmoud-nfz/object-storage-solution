@@ -3,6 +3,7 @@ package main
 import (
 	"data-storage/src/auth"
 	httpHandlers "data-storage/src/http/handlers"
+	"data-storage/src/websockets"
 	websocketHandlers "data-storage/src/websockets/handlers"
 
 	"net/http"
@@ -27,7 +28,7 @@ func initializeRoutes() {
 		c.Next()
 	})
 
-	websocketRoutes := router.Group("/", auth.EnsureUserAuthenticated())
+	websocketRoutes := router.Group("/", websockets.WebSocketUpgrade(), auth.EnsureUserAuthenticated())
 	{
 		websocketRoutes.GET("/download", websocketHandlers.WebsocketSendObjectHandler)
 

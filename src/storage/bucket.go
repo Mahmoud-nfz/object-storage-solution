@@ -7,8 +7,8 @@ import (
 )
 
 func MakeBucket(destination string) error {
-	if _, err := MinioClient.BucketExists(context.Background(), destination); err != nil {
-		if errResp := minio.ToErrorResponse(err); errResp.Code == "NoSuchBucket" {
+	if found, err := MinioClient.BucketExists(context.Background(), destination); err != nil || !found {
+		if errResp := minio.ToErrorResponse(err); !found || errResp.Code == "NoSuchBucket" {
 			err = MinioClient.MakeBucket(context.Background(), destination, minio.MakeBucketOptions{})
 			if err != nil {
 				return err

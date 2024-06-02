@@ -10,6 +10,8 @@ import (
 )
 
 var MinioClient *minio.Client
+var UploadsBucket = "uploads"
+var DataBucket = "data"
 
 func init() {
 	useSSL := false
@@ -19,8 +21,16 @@ func init() {
 	})
 
 	if err != nil {
-		log.Fatalln("Error initializing Minio client:", err)
+		log.Fatalln("Error initializing Minio client: ", err)
 	} else {
 		MinioClient = client
+	}
+
+	if err := MakeBucket(UploadsBucket); err != nil {
+		log.Fatalln("Error initializing uploads bucket: ", err)
+	}
+
+	if err := MakeBucket(DataBucket); err != nil {
+		log.Fatalln("Error initializing data bucket: ", err)
 	}
 }

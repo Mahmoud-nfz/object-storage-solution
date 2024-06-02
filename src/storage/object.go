@@ -3,6 +3,7 @@ package storage
 import (
 	"bytes"
 	"context"
+	"log"
 
 	"github.com/minio/minio-go/v7"
 )
@@ -71,3 +72,12 @@ func CopyObjectToBucket(bucketName, destination, objectName string) error {
 	return nil
 }
 
+func ConcatenateObjects(dst minio.CopyDestOptions, srcs ...minio.CopySrcOptions) (minio.UploadInfo, error) {
+	uploadInfo, err := MinioClient.ComposeObject(context.Background(), dst, srcs...)
+	if err != nil {
+		log.Printf("failed to compose object: %v", err)
+		return uploadInfo, err
+	}
+
+	return uploadInfo, nil
+}

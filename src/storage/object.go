@@ -8,6 +8,15 @@ import (
 	"github.com/minio/minio-go/v7"
 )
 
+func GetObject(bucketName, objectName string) (*minio.Object, error) {
+	object, err := MinioClient.GetObject(context.Background(), bucketName, objectName, minio.GetObjectOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	return object, nil
+}
+
 func MakeObject(bucketName, objectName string, data []byte) error {
 	reader := bytes.NewReader(data)
 	opts := minio.PutObjectOptions{

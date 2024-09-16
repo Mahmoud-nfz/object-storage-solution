@@ -172,6 +172,7 @@ func combineAndUploadFile(destinationPath, sourcePrefix string, numChunks uint64
 			Object: chunkFilePath,
 		}
 	}
+	// TODO: destination bucket should not be the same for all data collections
 	dst := minio.CopyDestOptions{
 		Bucket: storage.DataBucket,
 		Object: destinationPath,
